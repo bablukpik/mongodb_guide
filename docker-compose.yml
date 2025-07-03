@@ -16,3 +16,18 @@ services:
 
 volumes:
   mongo-data:
+# mongosh "mongodb://admin:admin@localhost:27017"
+# This will connect you to the test database by default, but you will be authenticated as the admin user in the admin database (because that's how the root user is set up).
+# You can switch to any database (e.g., use mongo_db) and perform admin actions.
+# You can also connect to the admin database directly with:
+# mongosh "mongodb://admin:admin@localhost:27017/admin"
+# This will connect you to the admin database and allow you to perform admin actions.
+
+# A MongoDB database is only created and shown after it contains at least one document (record).
+# The MONGO_INITDB_DATABASE: mongo_db environment variable only sets the default database for initialization scripts, but does not create the database unless you also provide an initialization script that inserts data or creates a collection.
+
+# To see mongo_db in show dbs, insert at least one document into it.
+# Example:
+# use mongo_db
+# db.test.insertOne({hello: "world"})
+# show dbs
