@@ -244,6 +244,45 @@ $pull; // remove value from array
 $pop; // remove first or last element from array
 ```
 
+### Comparison and Logical Operators Examples
+
+```js
+// Range queries
+db.users.find({ age: { $gte: 25, $lte: 35 } }); // age between 25 and 35
+db.users.find({ age: { $gt: 20, $lt: 40 } }); // age between 20 and 40 (exclusive)
+
+// Multiple conditions with AND (implicit)
+db.users.find({ age: { $gte: 25 }, city: "London" }); // age >= 25 AND city is London
+
+// Multiple conditions with OR
+db.users.find({ $or: [{ age: { $lt: 25 } }, { city: "Paris" }] }); // age < 25 OR city is Paris
+
+// Complex logical combinations
+db.users.find({
+  $and: [
+    { age: { $gte: 18 } },
+    { $or: [{ city: "London" }, { city: "Paris" }] },
+  ],
+}); // age >= 18 AND (city is London OR Paris)
+
+// NOT operator
+db.users.find({ age: { $not: { $lt: 30 } } }); // age is NOT less than 30
+db.users.find({ city: { $not: { $in: ["London", "Paris"] } } }); // city is NOT London or Paris
+
+// Field existence checks
+db.users.find({ phone: { $exists: true } }); // has phone field
+db.users.find({ phone: { $exists: false } }); // does not have phone field
+
+// Type checking
+db.users.find({ age: { $type: "int" } }); // age field is integer
+db.users.find({ age: { $type: "string" } }); // age field is string
+
+// Array operations
+db.users.find({ tags: { $in: ["admin", "manager"] } }); // has admin or manager tag
+db.users.find({ tags: { $all: ["admin", "verified"] } }); // has both admin AND verified tags
+db.users.find({ tags: { $size: 3 } }); // has exactly 3 tags
+```
+
 ### Aggregation Example
 
 ```js
