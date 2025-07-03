@@ -67,20 +67,46 @@ A practical MongoDB setup with guides for running MongoDB in Docker, performing 
   use mongo_db
   ```
 
-## 4. Example Queries (CRUD & Operators)
+**Notes**
+
+- The database (`mongo_db`) will only appear in `show dbs` after it contains at least one document.
+- The root user is created in the `admin` database. You can create additional users as needed.
+- To reset credentials, you must remove the data volume: `docker compose down -v` and then `docker compose up -d`.
+
+## 4. Some Useful Commands
+
+```js
+// Syntax:
+// show dbs
+show dbs
+
+// Syntax:
+// show collections
+show collections
+
+// Syntax:
+// .drop()
+db.users.drop()
+
+// Syntax:
+// .dropDatabase()
+db.dropDatabase()
+```
+
+## Example Queries (CRUD & Operators)
 
 ### Insert Documents
 
 ```js
 // Syntax:
 // .insertOne(document)
-db.users.insertOne({ name: "Alice", age: 30, city: "London" });
+db.users.insertOne({ name: 'Alice', age: 30, city: 'London' });
 
 // Syntax:
 // .insertMany([document, ...])
 db.users.insertMany([
-  { name: "Bob", age: 25, city: "Paris" },
-  { name: "Charlie", age: 35, city: "Berlin" },
+  { name: 'Bob', age: 25, city: 'Paris' },
+  { name: 'Charlie', age: 35, city: 'Berlin' },
 ]);
 ```
 
@@ -93,7 +119,7 @@ db.users.find();
 
 // Syntax:
 // .findOne(query)
-db.users.findOne({ name: "Alice" });
+db.users.findOne({ name: 'Alice' });
 
 // Syntax:
 // .find(query)
@@ -113,69 +139,69 @@ db.users.find().sort({ age: -1 }).limit(2);
 ```js
 // Syntax:
 // .updateOne(filter, update)
-db.users.updateOne({ name: "Alice" }, { $set: { city: "New York" } });
+db.users.updateOne({ name: 'Alice' }, { $set: { city: 'New York' } });
 
 // Syntax:
 // .updateMany(filter, update)
-db.users.updateMany({ city: "Paris" }, { $inc: { age: 1 } });
+db.users.updateMany({ city: 'Paris' }, { $inc: { age: 1 } });
 
 // Syntax:
 // .replaceOne(filter, replacement)
 db.users.replaceOne(
-  { name: "Charlie" },
-  { name: "Charlie", age: 36, city: "Munich" }
+  { name: 'Charlie' },
+  { name: 'Charlie', age: 36, city: 'Munich' },
 );
 
 // Syntax:
 // .updateOne(filter, { $unset: { field: "" } })
-db.users.updateOne({ name: "Alice" }, { $unset: { city: "" } });
+db.users.updateOne({ name: 'Alice' }, { $unset: { city: '' } });
 
 // Syntax:
 // .updateOne(filter, { $rename: { oldField: "newField" } })
-db.users.updateOne({ name: "Alice" }, { $rename: { name: "fullName" } });
+db.users.updateOne({ name: 'Alice' }, { $rename: { name: 'fullName' } });
 
 // Syntax:
 // .updateOne(filter, { $set: { field: value } })
-db.users.updateOne({ fullName: "Alice" }, { $set: { country: "UK" } });
+db.users.updateOne({ fullName: 'Alice' }, { $set: { country: 'UK' } });
 
 // Syntax:
 // .updateOne(filter, { $inc: { field: amount } })
-db.users.updateOne({ fullName: "Alice" }, { $inc: { age: 1 } });
+db.users.updateOne({ fullName: 'Alice' }, { $inc: { age: 1 } });
 
 // Syntax:
 // .updateOne(filter, { $mul: { field: factor } })
-db.users.updateOne({ fullName: "Alice" }, { $mul: { age: 2 } });
+db.users.updateOne({ fullName: 'Alice' }, { $mul: { age: 2 } });
 
 // Syntax:
 // .updateOne(filter, { $min: { field: value } })
-db.users.updateOne({ fullName: "Alice" }, { $min: { age: 18 } });
+db.users.updateOne({ fullName: 'Alice' }, { $min: { age: 18 } });
 
 // Syntax:
 // .updateOne(filter, { $max: { field: value } })
-db.users.updateOne({ fullName: "Alice" }, { $max: { age: 65 } });
+db.users.updateOne({ fullName: 'Alice' }, { $max: { age: 65 } });
 
 // Syntax:
 // .updateOne(filter, { $currentDate: { field: true } })
 db.users.updateOne(
-  { fullName: "Alice" },
-  { $currentDate: { lastModified: true } }
+  { fullName: 'Alice' },
+  { $currentDate: { lastModified: true } },
 );
 
 // Syntax:
 // .updateOne(filter, { $push: { arrayField: value } })
-db.users.updateOne({ fullName: "Alice" }, { $push: { tags: "new" } });
+db.users.updateOne({ fullName: 'Alice' }, { $push: { tags: 'new' } });
 
 // Syntax:
 // .updateOne(filter, { $addToSet: { arrayField: value } })
-db.users.updateOne({ fullName: "Alice" }, { $addToSet: { tags: "unique" } });
+db.users.updateOne({ fullName: 'Alice' }, { $addToSet: { tags: 'unique' } });
 
 // Syntax:
 // .updateOne(filter, { $pull: { arrayField: value } })
-db.users.updateOne({ fullName: "Alice" }, { $pull: { tags: "old" } });
+db.users.updateOne({ fullName: 'Alice' }, { $pull: { tags: 'old' } });
 
 // Syntax:
 // .updateOne(filter, { $pop: { arrayField: 1 or -1 } })
-db.users.updateOne({ fullName: "Alice" }, { $pop: { tags: 1 } });
+db.users.updateOne({ fullName: 'Alice' }, { $pop: { tags: 1 } });
 ```
 
 ### Delete Documents
@@ -183,7 +209,7 @@ db.users.updateOne({ fullName: "Alice" }, { $pop: { tags: 1 } });
 ```js
 // Syntax:
 // .deleteOne(filter)
-db.users.deleteOne({ name: "Bob" });
+db.users.deleteOne({ name: 'Bob' });
 
 // Syntax:
 // .deleteMany(filter)
@@ -197,20 +223,20 @@ db.users.deleteMany({ age: { $lt: 30 } });
 $eq; // equal
 db.users.find({ age: { $eq: 30 } });
 $ne; // not equal
-db.users.find({ city: { $ne: "London" } });
+db.users.find({ city: { $ne: 'London' } });
 $gt; // greater than
 $gte; // greater than or equal
 $lt; // less than
 $lte; // less than or equal
 $in; // in array
-db.users.find({ city: { $in: ["London", "Paris"] } });
+db.users.find({ city: { $in: ['London', 'Paris'] } });
 $nin; // not in array
 
 // Logical
 $and; // and
-db.users.find({ $and: [{ age: { $gt: 25 } }, { city: "London" }] });
+db.users.find({ $and: [{ age: { $gt: 25 } }, { city: 'London' }] });
 $or; // or
-db.users.find({ $or: [{ city: "London" }, { city: "Paris" }] });
+db.users.find({ $or: [{ city: 'London' }, { city: 'Paris' }] });
 $not; // not
 db.users.find({ age: { $not: { $gt: 30 } } });
 $nor; // nor
@@ -219,11 +245,11 @@ $nor; // nor
 $exists; // field exists
 db.users.find({ phone: { $exists: true } });
 $type; // field type
-db.users.find({ age: { $type: "int" } });
+db.users.find({ age: { $type: 'int' } });
 
 // Array
 $all; // all elements match
-db.users.find({ tags: { $all: ["red", "blue"] } });
+db.users.find({ tags: { $all: ['red', 'blue'] } });
 $size; // array size
 db.users.find({ tags: { $size: 2 } });
 $elemMatch; // element match
@@ -252,35 +278,174 @@ db.users.find({ age: { $gte: 25, $lte: 35 } }); // age between 25 and 35
 db.users.find({ age: { $gt: 20, $lt: 40 } }); // age between 20 and 40 (exclusive)
 
 // Multiple conditions with AND (implicit)
-db.users.find({ age: { $gte: 25 }, city: "London" }); // age >= 25 AND city is London
+db.users.find({ age: { $gte: 25 }, city: 'London' }); // age >= 25 AND city is London
+
+// Multiple conditions with AND (explicit)
+db.users.find({ $and: [{ age: { $gte: 25 } }, { city: 'London' }] }); // age >= 25 AND city is London
 
 // Multiple conditions with OR
-db.users.find({ $or: [{ age: { $lt: 25 } }, { city: "Paris" }] }); // age < 25 OR city is Paris
+db.users.find({ $or: [{ age: { $lt: 25 } }, { city: 'Paris' }] }); // age < 25 OR city is Paris
+
+// Multiple conditions with NOR (neither condition is true)
+db.users.find({ $nor: [{ age: { $lt: 25 } }, { city: 'Paris' }] }); // age is NOT < 25 AND city is NOT Paris
 
 // Complex logical combinations
 db.users.find({
   $and: [
     { age: { $gte: 18 } },
-    { $or: [{ city: "London" }, { city: "Paris" }] },
+    { $or: [{ city: 'London' }, { city: 'Paris' }] },
   ],
 }); // age >= 18 AND (city is London OR Paris)
 
+// This requires explicit $and because we're using the same field twice
+// prettier-ignore
+db.users.find({
+  $and: [
+    { age: { $gte: 18 } },
+    { age: { $lte: 65 } }
+  ]
+});
+
 // NOT operator
 db.users.find({ age: { $not: { $lt: 30 } } }); // age is NOT less than 30
-db.users.find({ city: { $not: { $in: ["London", "Paris"] } } }); // city is NOT London or Paris
+db.users.find({ city: { $not: { $in: ['London', 'Paris'] } } }); // city is NOT London or Paris
 
 // Field existence checks
 db.users.find({ phone: { $exists: true } }); // has phone field
 db.users.find({ phone: { $exists: false } }); // does not have phone field
 
 // Type checking
-db.users.find({ age: { $type: "int" } }); // age field is integer
-db.users.find({ age: { $type: "string" } }); // age field is string
+db.users.find({ age: { $type: 'int' } }); // age field is integer
+db.users.find({ age: { $type: 'string' } }); // age field is string
 
 // Array operations
-db.users.find({ tags: { $in: ["admin", "manager"] } }); // has admin or manager tag
-db.users.find({ tags: { $all: ["admin", "verified"] } }); // has both admin AND verified tags
+db.users.find({ tags: { $in: ['admin', 'manager'] } }); // has admin or manager tag
+db.users.find({ tags: { $nin: ['banned', 'suspended'] } }); // does NOT have banned or suspended tag
+db.users.find({ tags: { $all: ['admin', 'verified'] } }); // has both admin AND verified tags
 db.users.find({ tags: { $size: 3 } }); // has exactly 3 tags
+```
+
+### Advanced Query Features
+
+#### Text Search
+
+```js
+// Syntax:
+// .createIndex({ field: "text" })
+// Create text index on multiple fields
+db.products.createIndex({ name: 'text', description: 'text' });
+
+// Syntax:
+// .find({ $text: { $search: "search terms" } })
+// Text search query
+db.products.find({ $text: { $search: 'wireless mouse' } });
+```
+
+#### Regular Expressions
+
+```js
+// Syntax:
+// .find({ field: /pattern/ })
+// Find users whose name starts with "A"
+db.users.find({ name: /^A/ });
+
+// Syntax:
+// .find({ field: /pattern/i })
+// Case-insensitive search
+db.users.find({ name: /alice/i });
+
+// Syntax:
+// .find({ field: /pattern/ })
+// Find users whose name contains "john"
+db.users.find({ name: /john/ });
+```
+
+#### Date/Time Operations
+
+```js
+// Syntax:
+// .find({ dateField: { $gte: new Date() } })
+// Find documents created in the last 7 days
+db.sales.find({
+  date: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+});
+
+// Syntax:
+// .find({ dateField: { $gte: ISODate(), $lt: ISODate() } })
+// Find documents by specific date range
+db.sales.find({
+  date: {
+    $gte: ISODate('2024-01-01'),
+    $lt: ISODate('2024-02-01'),
+  },
+});
+```
+
+#### Bulk Operations
+
+```js
+// Syntax:
+// .bulkWrite([operations])
+// Bulk insert multiple documents
+db.users.bulkWrite([
+  { insertOne: { document: { name: 'Alice', age: 30 } } },
+  { insertOne: { document: { name: 'Bob', age: 25 } } },
+]);
+
+// Syntax:
+// .bulkWrite([operations])
+// Bulk update multiple documents
+db.users.bulkWrite([
+  { updateOne: { filter: { name: 'Alice' }, update: { $set: { age: 31 } } } },
+  { updateOne: { filter: { name: 'Bob' }, update: { $set: { age: 26 } } } },
+]);
+```
+
+#### Count and Distinct
+
+```js
+// Syntax:
+// .countDocuments(query)
+// Count documents matching criteria
+db.users.countDocuments({ age: { $gt: 25 } });
+
+// Syntax:
+// .distinct(field, query)
+// Get distinct values for a field
+db.users.distinct('city');
+
+// Syntax:
+// .distinct(field, query)
+// Get distinct cities for users over 25
+db.users.distinct('city', { age: { $gt: 25 } });
+```
+
+#### Skip and Limit for Pagination
+
+```js
+// Syntax:
+// .find().skip(n).limit(n)
+// Pagination example - get users 11-15
+db.users.find().skip(10).limit(5);
+
+// Syntax:
+// .find().sort().skip().limit()
+// Pagination with sorting
+db.users.find().sort({ name: 1 }).skip(10).limit(5);
+```
+
+#### Explain Plan
+
+```js
+// Syntax:
+// .find(query).explain("executionStats")
+// See how MongoDB executes a query
+db.users.find({ age: { $gt: 25 } }).explain('executionStats');
+
+// Syntax:
+// .find(query).explain("queryPlanner")
+// See the query plan without executing
+db.users.find({ age: { $gt: 25 } }).explain('queryPlanner');
 ```
 
 ### Aggregation Example
@@ -289,43 +454,17 @@ db.users.find({ tags: { $size: 3 } }); // has exactly 3 tags
 // Syntax:
 // .aggregate([pipeline])
 // Group by city and count users
-db.users.aggregate([{ $group: { _id: "$city", count: { $sum: 1 } } }]);
+db.users.aggregate([{ $group: { _id: '$city', count: { $sum: 1 } } }]);
 ```
 
-### Other Useful Commands
-
-```js
-// Syntax:
-// show dbs
-show dbs
-
-// Syntax:
-// show collections
-show collections
-
-// Syntax:
-// .drop()
-db.users.drop()
-
-// Syntax:
-// .dropDatabase()
-db.dropDatabase()
-```
-
-## 5. Notes
-
-- The database (`mongo_db`) will only appear in `show dbs` after it contains at least one document.
-- The root user is created in the `admin` database. You can create additional users as needed.
-- To reset credentials, you must remove the data volume: `docker compose down -v` and then `docker compose up -d`.
-
-## 6. Contribution Guidelines
+## Contribution Guidelines
 
 _Contributions are welcome! Please open an issue or submit a pull request._
 
-## 7. License
+## License
 
 _Add your license here (e.g., MIT, Apache 2.0, etc.)._
 
-## 8. Contact/Support
+## Contact/Support
 
 _For questions or support, please contact bablukpik@gmail.com or open an issue in this repository._
