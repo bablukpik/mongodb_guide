@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:8 # Or a specific version like mongo:6
+    container_name: my_mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+      MONGO_INITDB_DATABASE: mongo_db
+    ports:
+      - "27017:27017" # Map host port 27017 to container port 27017
+    volumes:
+      - mongo-data:/data/db # Persist data using a named volume
+    restart: always # Ensure the container restarts automatically if stopped
+
+volumes:
+  mongo-data:
