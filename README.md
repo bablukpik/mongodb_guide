@@ -2,6 +2,17 @@
 
 A practical MongoDB setup with guides for running MongoDB in Docker, performing CRUD operations, and modeling real-world data relationships. Includes a full POS/inventory example and advanced relationship patterns.
 
+## Key MongoDB Concepts
+
+- **Collection:** A group of MongoDB documents, similar to a table in relational databases.
+- **Document:** A record in a collection, stored as a JSON-like object (BSON). Each document has a unique `_id` field.
+- **Projection:** Selecting which fields to include or exclude in query results (e.g., `{ name: 1, _id: 0 }`).
+- **Aggregation:** A framework for processing data and returning computed results, often used for reporting and analytics (e.g., using `$group`, `$match`, `$lookup`).
+- **Index:** A data structure that improves the speed of data retrieval operations on a collection.
+- **Query:** A request to find documents in a collection that match certain criteria.
+- **Operator:** Special keywords used in queries and updates (e.g., `$gt`, `$set`, `$inc`).
+- **Schema:** The structure of documents in a collection. MongoDB is schema-less, but you can enforce structure in your application or with validation rules.
+
 ## Quick Links
 
 - [POS/Inventory Example](./pos.md)
@@ -61,10 +72,12 @@ A practical MongoDB setup with guides for running MongoDB in Docker, performing 
 ### Insert Documents
 
 ```js
-// Insert one document
+// Syntax:
+// .insertOne(document)
 db.users.insertOne({ name: "Alice", age: 30, city: "London" });
 
-// Insert multiple documents
+// Syntax:
+// .insertMany([document, ...])
 db.users.insertMany([
   { name: "Bob", age: 25, city: "Paris" },
   { name: "Charlie", age: 35, city: "Berlin" },
@@ -74,80 +87,106 @@ db.users.insertMany([
 ### Find (Read) Documents
 
 ```js
-// Find all documents
+// Syntax:
+// .find(query, projection)
 db.users.find();
 
-// Find one document
+// Syntax:
+// .findOne(query)
 db.users.findOne({ name: "Alice" });
 
-// Find with a query operator
+// Syntax:
+// .find(query)
 db.users.find({ age: { $gt: 25 } }); // age > 25
 
-// Projection (only show name and city)
+// Syntax:
+// .find(query, projection)
 db.users.find({}, { name: 1, city: 1, _id: 0 });
 
-// Sort and limit
+// Syntax:
+// .find().sort(sort).limit(n)
 db.users.find().sort({ age: -1 }).limit(2);
 ```
 
 ### Update Documents
 
 ```js
-// Update one document
+// Syntax:
+// .updateOne(filter, update)
 db.users.updateOne({ name: "Alice" }, { $set: { city: "New York" } });
 
-// Update multiple documents
+// Syntax:
+// .updateMany(filter, update)
 db.users.updateMany({ city: "Paris" }, { $inc: { age: 1 } });
 
-// Replace a document
+// Syntax:
+// .replaceOne(filter, replacement)
 db.users.replaceOne(
   { name: "Charlie" },
   { name: "Charlie", age: 36, city: "Munich" }
 );
 
-// Unset (remove) a field
+// Syntax:
+// .updateOne(filter, { $unset: { field: "" } })
 db.users.updateOne({ name: "Alice" }, { $unset: { city: "" } });
 
-// Rename a field
+// Syntax:
+// .updateOne(filter, { $rename: { oldField: "newField" } })
 db.users.updateOne({ name: "Alice" }, { $rename: { name: "fullName" } });
 
-// Set a field (add or update)
+// Syntax:
+// .updateOne(filter, { $set: { field: value } })
 db.users.updateOne({ fullName: "Alice" }, { $set: { country: "UK" } });
 
-// Increment a field
+// Syntax:
+// .updateOne(filter, { $inc: { field: amount } })
 db.users.updateOne({ fullName: "Alice" }, { $inc: { age: 1 } });
 
-// Multiply a field
+// Syntax:
+// .updateOne(filter, { $mul: { field: factor } })
 db.users.updateOne({ fullName: "Alice" }, { $mul: { age: 2 } });
 
-// Set to min or max value
+// Syntax:
+// .updateOne(filter, { $min: { field: value } })
 db.users.updateOne({ fullName: "Alice" }, { $min: { age: 18 } });
+
+// Syntax:
+// .updateOne(filter, { $max: { field: value } })
 db.users.updateOne({ fullName: "Alice" }, { $max: { age: 65 } });
 
-// Set current date
+// Syntax:
+// .updateOne(filter, { $currentDate: { field: true } })
 db.users.updateOne(
   { fullName: "Alice" },
   { $currentDate: { lastModified: true } }
 );
 
-// Array operators
-// Push a value to an array
+// Syntax:
+// .updateOne(filter, { $push: { arrayField: value } })
 db.users.updateOne({ fullName: "Alice" }, { $push: { tags: "new" } });
-// Add to set (only if not present)
+
+// Syntax:
+// .updateOne(filter, { $addToSet: { arrayField: value } })
 db.users.updateOne({ fullName: "Alice" }, { $addToSet: { tags: "unique" } });
-// Pull a value from an array
+
+// Syntax:
+// .updateOne(filter, { $pull: { arrayField: value } })
 db.users.updateOne({ fullName: "Alice" }, { $pull: { tags: "old" } });
-// Pop first or last element from array (-1: first, 1: last)
+
+// Syntax:
+// .updateOne(filter, { $pop: { arrayField: 1 or -1 } })
 db.users.updateOne({ fullName: "Alice" }, { $pop: { tags: 1 } });
 ```
 
 ### Delete Documents
 
 ```js
-// Delete one document
+// Syntax:
+// .deleteOne(filter)
 db.users.deleteOne({ name: "Bob" });
 
-// Delete multiple documents
+// Syntax:
+// .deleteMany(filter)
 db.users.deleteMany({ age: { $lt: 30 } });
 ```
 
@@ -208,6 +247,8 @@ $pop; // remove first or last element from array
 ### Aggregation Example
 
 ```js
+// Syntax:
+// .aggregate([pipeline])
 // Group by city and count users
 db.users.aggregate([{ $group: { _id: "$city", count: { $sum: 1 } } }]);
 ```
@@ -215,16 +256,20 @@ db.users.aggregate([{ $group: { _id: "$city", count: { $sum: 1 } } }]);
 ### Other Useful Commands
 
 ```js
-// Show all databases
+// Syntax:
+// show dbs
 show dbs
 
-// Show collections in current database
+// Syntax:
+// show collections
 show collections
 
-// Drop a collection
+// Syntax:
+// .drop()
 db.users.drop()
 
-// Drop the current database
+// Syntax:
+// .dropDatabase()
 db.dropDatabase()
 ```
 
