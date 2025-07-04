@@ -448,7 +448,279 @@ db.users.find({ age: { $gt: 25 } }).explain('executionStats');
 db.users.find({ age: { $gt: 25 } }).explain('queryPlanner');
 ```
 
+#### Why Use .explain()?
+
+- **Performance Analysis**: Understand how MongoDB executes your queries
+- **Index Usage**: See if your queries are using indexes effectively
+- **Optimization**: Identify slow queries and optimize them
+- **Debugging**: Understand why queries are slow or not using expected indexes
+
+#### Explain Modes
+
+```js
+// queryPlanner (default) - Shows the plan without executing
+db.users.find({ age: { $gt: 25 } }).explain('queryPlanner');
+
+// executionStats - Shows actual execution statistics
+db.users.find({ age: { $gt: 25 } }).explain('executionStats');
+
+// allPlansExecution - Shows all considered plans
+db.users.find({ age: { $gt: 25 } }).explain('allPlansExecution');
+```
+
+#### Practical Examples
+
+```js
+// Check if a query uses an index
+db.users.find({ email: 'alice@example.com' }).explain('executionStats');
+// Look for "winningPlan" → "inputStage" → "indexName" in the output
+
+// Compare query performance with and without index
+// Without index:
+db.users.find({ age: { $gt: 25 } }).explain('executionStats');
+// With index:
+db.users.createIndex({ age: 1 });
+db.users.find({ age: { $gt: 25 } }).explain('executionStats');
+
+// Analyze aggregation pipeline performance
+db.sales
+  .aggregate([
+    { $match: { date: { $gte: ISODate('2024-01-01') } } },
+    { $group: { _id: '$productId', total: { $sum: '$amount' } } },
+  ])
+  .explain('executionStats');
+```
+
+#### Key Metrics to Look For
+
+- **nReturned**: Number of documents returned
+- **totalKeysExamined**: Number of index entries examined
+- **totalDocsExamined**: Number of documents examined
+- **executionTimeMillis**: Time taken to execute the query
+- **winningPlan**: The plan MongoDB chose to execute
+
+## Indexing
+
+**What are Indexes?**
+Indexes are data structures that improve the speed of data retrieval operations on a collection. Without indexes, MongoDB must scan every document in a collection to find matches.
+
+**Why We Need Indexes:**
+
+- **Performance**: Queries run much faster with proper indexes
+- **Scalability**: Essential for large collections
+- **Efficiency**: Reduces CPU and memory usage
+- **User Experience**: Faster response times for applications
+
+**Note**: An index allows for quick lookup of a field. And it takes up more memory and slows insert, update, and remove operations. So use it wisely. If there's a field you search for but you don't do many updates, I would recommend an index.
+
+### Creating Indexes
+
+```js
+// Syntax:
+// .createIndex({ field: 1 }) // 1 for ascending, -1 for descending
+// Single field index
+db.users.createIndex({ email: 1 });
+
+// Syntax:
+// .createIndex({ field1: 1, field2: 1 })
+// Compound index (multiple fields)
+db.users.createIndex({ age: 1, city: 1 });
+
+// Syntax:
+// .createIndex({ field: 1 }, { unique: true })
+// Unique index (prevents duplicate values)
+db.users.createIndex({ email: 1 }, { unique: true });
+
+// Syntax:
+// .createIndex({ field: "text" })
+// Text index for text search
+db.products.createIndex({ name: 'text', description: 'text' });
+
+// Syntax:
+// .createIndex({ field: 1 }, { sparse: true })
+// Sparse index (only includes documents with the field)
+db.users.createIndex({ phone: 1 }, { sparse: true });
+```
+
+### Index Types and Examples
+
+```js
+// Single Field Index
+db.products.createIndex({ sku: 1 }); // Ascending
+db.products.createIndex({ price: -1 }); // Descending
+
+// Compound Index (order matters!)
+db.sales.createIndex({ customerId: 1, date: -1 });
+// Good for queries like: db.sales.find({ customerId: "123", date: { $gte: startDate } })
+
+// Unique Index
+db.users.createIndex({ username: 1 }, { unique: true });
+// Prevents duplicate usernames
+
+// Text Index
+db.products.createIndex({ name: 'text', description: 'text' });
+// Enables text search: db.products.find({ $text: { $search: "wireless" } })
+
+// Sparse Index
+db.users.createIndex({ phone: 1 }, { sparse: true });
+// Only indexes documents that have a phone field
+```
+
+### Checking Index Usage
+
+```js
+// List all indexes on a collection
+db.users.getIndexes();
+
+// Check if a query uses an index
+db.users.find({ email: 'alice@example.com' }).explain('executionStats');
+// Look for "winningPlan" → "inputStage" → "indexName"
+
+// Drop an index
+db.users.dropIndex('email_1'); // Drop by name
+db.users.dropIndex({ email: 1 }); // Drop by specification
+```
+
+### Index Best Practices
+
+```js
+// Create indexes for frequently queried fields
+db.orders.createIndex({ customerId: 1, status: 1 });
+
+// Create indexes for fields used in sorting
+db.products.createIndex({ price: 1 });
+
+// Create indexes for fields used in range queries
+db.sales.createIndex({ date: 1 });
+
+// Avoid creating too many indexes (each index uses storage and slows writes)
+// Monitor index usage and remove unused indexes
+```
+
+## Capped Collections
+
+**What are Capped Collections?**
+Capped collections are fixed-size collections that automatically overwrite the oldest documents when they reach their maximum size. They maintain insertion order and are useful for logging, caching, and real-time data.
+
+**Why Use Capped Collections:**
+
+- **Fixed Size**: Prevents unlimited growth
+- **Automatic Cleanup**: Oldest documents are automatically removed
+- **Performance**: Fast writes and reads due to fixed size
+- **Order Preservation**: Documents are stored in insertion order
+
+### Creating Capped Collections
+
+```js
+// Syntax:
+// db.createCollection(name, { capped: true, size: bytes, max: documents })
+// Create a capped collection with size limit
+db.createCollection('logs', { capped: true, size: 1000000 }); // 1MB size limit
+
+// Syntax:
+// db.createCollection(name, { capped: true, size: bytes, max: documents })
+// Create a capped collection with both size and document count limits
+db.createCollection('recent_orders', {
+  capped: true,
+  size: 5000000, // 5MB
+  max: 1000, // Maximum 1000 documents
+});
+
+// Syntax:
+// db.createCollection(name, { capped: true, size: bytes })
+// Create a simple capped collection for recent activities
+db.createCollection('user_activities', {
+  capped: true,
+  size: 2000000, // 2MB
+});
+
+// Syntax:
+// db.createCollection(name, { capped: true, autoIndexID: false })
+// Create a capped collection without automatic _id indexing
+db.createCollection('high_performance_logs', {
+  capped: true,
+  size: 1000000, // 1MB
+  autoIndexID: false, // Disable automatic _id index for better performance
+});
+
+// Syntax:
+// db.createCollection(name, { capped: true, autoIndexID: true })
+// Explicitly enable automatic _id indexing (default behavior)
+db.createCollection('logs_with_id_index', {
+  capped: true,
+  size: 2000000, // 2MB
+  autoIndexID: true, // Enable automatic _id index
+});
+```
+
+### Working with Capped Collections
+
+```js
+// Insert documents (oldest will be overwritten when limit is reached)
+db.logs.insertOne({
+  timestamp: new Date(),
+  message: 'User logged in',
+  userId: '123',
+});
+
+// Query capped collection (returns documents in insertion order)
+db.logs.find().sort({ $natural: 1 }); // Ascending (oldest first)
+db.logs.find().sort({ $natural: -1 }); // Descending (newest first)
+
+// Check collection stats
+db.logs.stats();
+
+// Convert existing collection to capped (requires empty collection)
+db.runCommand({ convertToCapped: 'logs', size: 1000000 });
+```
+
+### Use Cases
+
+```js
+// Application logs
+db.createCollection('app_logs', { capped: true, size: 10000000 }); // 10MB
+
+// Recent user sessions
+db.createCollection('sessions', { capped: true, size: 5000000, max: 5000 });
+
+// Real-time metrics
+db.createCollection('metrics', { capped: true, size: 2000000, max: 10000 });
+
+// Chat messages (last 1000 messages)
+db.createCollection('chat_messages', {
+  capped: true,
+  size: 1000000,
+  max: 1000,
+});
+```
+
+## Aggregation
+
+Aggregation is MongoDB's framework for processing documents and returning computed results. It's similar to SQL's GROUP BY, but more powerful and flexible. In MongoDB aggregation, the pipeline executes from **top to bottom**, with each stage processing the output of the previous stage.
+
+**Example Use Cases**
+
+- Count total orders per user
+- Sum sales per month
+- Group products by category
+- Filter, sort, reshape documents
+
+### Common Aggregation Operators
+
+| Stage                          | Purpose                                         |
+| ------------------------------ | ----------------------------------------------- |
+| `$match`                       | Filters documents (like `WHERE`)                |
+| `$group`                       | Groups by a field (like `GROUP BY`)             |
+| `$sum`, `$avg`, `$min`, `$max` | Calculations                                    |
+| `$sort`                        | Sorts the output                                |
+| `$project`                     | Shapes the result (select fields, rename, etc.) |
+| `$lookup`                      | Performs joins                                  |
+| `$limit`, `$skip`              | Pagination                                      |
+| `$unwind`                      | Deconstructs arrays                             |
+
 ### Aggregation Example
+
+1.
 
 ```js
 // Syntax:
@@ -456,6 +728,80 @@ db.users.find({ age: { $gt: 25 } }).explain('queryPlanner');
 // Group by city and count users
 db.users.aggregate([{ $group: { _id: '$city', count: { $sum: 1 } } }]);
 ```
+
+2.
+
+```js
+db.posts.aggregate([
+  // Stage 1: Only find documents that have more than 1 like
+  {
+    $match: { likes: { $gt: 1 } },
+  },
+  // Stage 2: Group documents by the category field and sum each categories likes
+  {
+    $group: { _id: '$category', totalLikes: { $sum: '$likes' } },
+  },
+]);
+```
+
+3.
+
+```js
+db.sales.aggregate([
+  // Stage 1: Group sales by product ID and sum the amounts
+  { $group: { _id: '$productId', totalSales: { $sum: '$amount' } } },
+  // Stage 2: Sort the results by total sales in descending order
+  { $sort: { totalSales: -1 } },
+]);
+```
+
+4.
+
+```js
+db.orders.aggregate([
+  // Stage 1: Filter only delivered orders
+  { $match: { status: 'delivered' } },
+  // Stage 2: Group by customer ID and sum their total spent
+  { $group: { _id: '$customerId', totalSpent: { $sum: '$amount' } } },
+  // Stage 3: Sort customers by total spent in descending order
+  { $sort: { totalSpent: -1 } },
+]);
+```
+
+5.
+
+```js
+// Example 4: Complex aggregation with multiple stages
+db.sales.aggregate([
+  // Stage 1: Filter sales from last month
+  {
+    $match: {
+      date: {
+        $gte: ISODate('2024-06-01'),
+        $lt: ISODate('2024-07-01'),
+      },
+    },
+  },
+  // Stage 2: Unwind the items array
+  { $unwind: '$items' },
+  // Stage 3: Group by product and calculate totals
+  {
+    $group: {
+      _id: '$items.product_id',
+      totalQuantity: { $sum: '$items.quantity' },
+      totalRevenue: {
+        $sum: { $multiply: ['$items.price', '$items.quantity'] },
+      },
+    },
+  },
+  // Stage 4: Sort by revenue
+  { $sort: { totalRevenue: -1 } },
+  // Stage 5: Limit to top 10
+  { $limit: 10 },
+]);
+```
+
+**Performance Note:** Aggregation pipelines can be resource-intensive. Use indexes on fields used in `$match` stages, and consider using `$limit` early in the pipeline to reduce the number of documents processed.
 
 ## Contribution Guidelines
 
