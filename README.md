@@ -695,6 +695,255 @@ db.createCollection('chat_messages', {
 });
 ```
 
+## Schema Validation
+
+**What is Schema Validation?**
+In MongoDB, there is no strict schema validation set up by default. Schema validation allows you to enforce document structure and data types in MongoDB collections. While MongoDB is schema-less, you can still add validation rules to ensure data consistency and quality.
+
+**Why Use Schema Validation:**
+
+- **Data Quality**: Ensures documents have required fields and correct data types
+- **Application Consistency**: Prevents invalid data from being inserted
+- **Error Prevention**: Catches data issues early in the development process
+- **Documentation**: Serves as documentation for expected data structure
+
+### Creating Collections with Validation
+
+```js
+// Syntax:
+// db.createCollection(name, { validator: { $jsonSchema: { ... } } })
+// Create collection with validation rules
+db.createCollection('users', {
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['name', 'email', 'age'],
+      properties: {
+        name: {
+          bsonType: 'string',
+          description: 'Name must be a string and is required',
+        },
+        email: {
+          bsonType: 'string',
+          pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
+          description: 'Email must be a valid email address',
+        },
+        age: {
+          bsonType: 'int',
+          minimum: 0,
+          maximum: 120,
+          description: 'Age must be an integer between 0 and 120',
+        },
+        phone: {
+          bsonType: 'string',
+          pattern: '^\\+?[1-9]\\d{1,14}$',
+          description: 'Phone must be a valid international number',
+        },
+      },
+    },
+  },
+});
+```
+
+### Adding Validation to Existing Collections
+
+```js
+// Syntax:
+// db.runCommand({ collMod: collectionName, validator: { $jsonSchema: { ... } } })
+// Add validation to existing collection
+db.runCommand({
+  collMod: 'products',
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['name', 'price', 'category'],
+      properties: {
+        name: {
+          bsonType: 'string',
+          minLength: 1,
+          maxLength: 100,
+        },
+        price: {
+          bsonType: 'number',
+          minimum: 0,
+        },
+        category: {
+          enum: ['Electronics', 'Clothing', 'Books', 'Home'],
+        },
+        tags: {
+          bsonType: 'array',
+          items: {
+            bsonType: 'string',
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+### Validation Examples
+
+```js
+// Product validation with nested objects
+db.createCollection('products', {
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['sku', 'name', 'price', 'inventory'],
+      properties: {
+        sku: {
+          bsonType: 'string',
+          pattern: '^[A-Z]{2}\\d{4}$', // Format: AA1234
+        },
+        name: {
+          bsonType: 'string',
+          minLength: 1,
+          maxLength: 200,
+        },
+        price: {
+          bsonType: 'number',
+          minimum: 0,
+        },
+        inventory: {
+          bsonType: 'object',
+          required: ['quantity', 'location'],
+          properties: {
+            quantity: {
+              bsonType: 'int',
+              minimum: 0,
+            },
+            location: {
+              bsonType: 'string',
+            },
+          },
+        },
+        tags: {
+          bsonType: 'array',
+          items: {
+            bsonType: 'string',
+          },
+          maxItems: 10,
+        },
+      },
+    },
+  },
+});
+
+// Order validation with complex rules
+db.createCollection('orders', {
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['customerId', 'items', 'total', 'status'],
+      properties: {
+        customerId: {
+          bsonType: 'objectId',
+        },
+        items: {
+          bsonType: 'array',
+          minItems: 1,
+          items: {
+            bsonType: 'object',
+            required: ['productId', 'quantity', 'price'],
+            properties: {
+              productId: {
+                bsonType: 'objectId',
+              },
+              quantity: {
+                bsonType: 'int',
+                minimum: 1,
+              },
+              price: {
+                bsonType: 'number',
+                minimum: 0,
+              },
+            },
+          },
+        },
+        total: {
+          bsonType: 'number',
+          minimum: 0,
+        },
+        status: {
+          enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+        },
+        createdAt: {
+          bsonType: 'date',
+        },
+      },
+    },
+  },
+});
+```
+
+### Validation Options
+
+```js
+// Syntax:
+// db.createCollection(name, { validator: {...}, validationLevel: 'strict' })
+// Create collection with strict validation
+db.createCollection('strict_users', {
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['email'],
+      properties: {
+        email: {
+          bsonType: 'string',
+          pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
+        },
+      },
+    },
+  },
+  validationLevel: 'strict', // Reject invalid documents
+  validationAction: 'error', // Throw error for invalid documents
+});
+
+// Syntax:
+// db.createCollection(name, { validator: {...}, validationLevel: 'moderate' })
+// Create collection with moderate validation (warnings only)
+db.createCollection('moderate_users', {
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['email'],
+      properties: {
+        email: {
+          bsonType: 'string',
+        },
+      },
+    },
+  },
+  validationLevel: 'moderate', // Allow invalid documents but log warnings
+  validationAction: 'warn', // Log warnings for invalid documents
+});
+```
+
+### Testing Validation
+
+```js
+// Test valid document
+db.users.insertOne({
+  name: 'John Doe',
+  email: 'john@example.com',
+  age: 30,
+}); // ✅ Success
+
+// Test invalid document
+db.users.insertOne({
+  name: 'Jane Doe',
+  email: 'invalid-email',
+  age: 150,
+}); // ❌ Error: validation failed
+
+// Test missing required field
+db.users.insertOne({
+  name: 'Bob Smith',
+  age: 25,
+}); // ❌ Error: missing required field 'email'
+```
+
 ## Aggregation
 
 Aggregation is MongoDB's framework for processing documents and returning computed results. It's similar to SQL's GROUP BY, but more powerful and flexible. In MongoDB aggregation, the pipeline executes from **top to bottom**, with each stage processing the output of the previous stage.
