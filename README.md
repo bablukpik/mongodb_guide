@@ -511,7 +511,7 @@ Indexes are data structures that improve the speed of data retrieval operations 
 - **Efficiency**: Reduces CPU and memory usage
 - **User Experience**: Faster response times for applications
 
-**Note**: An index allows for quick lookup of a field. And it takes up more memory and slows insert, update, and remove operations. So use it wisely. If there's a field you search for but you don't do many updates, I would recommend an index.
+**Note**: An index allows for quick lookup of a field. And it takes up more memory and slows insert, update, and remove operations. So use it wisely. If there's a field you search for but you don't do many updates, I would recommend using an index.
 
 ### Creating Indexes
 
@@ -558,6 +558,7 @@ db.users.createIndex({ username: 1 }, { unique: true });
 // Prevents duplicate usernames
 
 // Text Index
+// MongoDB comes with a full-text search engine that can be used to search for documents in a collection.
 db.products.createIndex({ name: 'text', description: 'text' });
 // Enables text search: db.products.find({ $text: { $search: "wireless" } })
 
@@ -717,6 +718,9 @@ Aggregation is MongoDB's framework for processing documents and returning comput
 | `$lookup`                      | Performs joins                                  |
 | `$limit`, `$skip`              | Pagination                                      |
 | `$unwind`                      | Deconstructs arrays                             |
+| `$addFields`                   | Adds new fields to documents                    |
+| `$count`                       | Counts documents in the pipeline                |
+| `$out`                         | Writes results to a new collection              |
 
 ### Aggregation Example
 
