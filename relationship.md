@@ -2,6 +2,43 @@
 
 MongoDB is a NoSQL database and does not have built-in foreign key or primary key constraints like SQL databases. However, you can model relationships between collections using references and indexes.
 
+## Table of Contents
+
+- [Document Size Limitation](#document-size-limitation)
+- [1. Primary Key Equivalent](#1-primary-key-equivalent)
+- [2. Foreign Key Equivalent (References)](#2-foreign-key-equivalent-references)
+- [3. Enforcing Relationships](#3-enforcing-relationships)
+- [4. Join-like Queries with $lookup](#4-join-like-queries-with-lookup)
+- [5. Embedding vs. Referencing](#5-embedding-vs-referencing)
+  - [When to Embed (Preferred)](#when-to-embed-preferred)
+  - [When to Reference (Required for Large Data)](#when-to-reference-required-for-large-data)
+- [6. Advanced Patterns & Real-World Scenarios](#6-advanced-patterns--real-world-scenarios)
+  - [1. Polymorphic References](#1-polymorphic-references)
+  - [2. Many-to-Many Relationships (Join/Bridge Collections)](#2-many-to-many-relationships-joinbridge-collections)
+  - [3. One-to-Many Relationships](#3-one-to-many-relationships)
+    - [Example: Users and Posts](#example-users-and-posts)
+    - [Querying One-to-Many Relationships](#querying-one-to-many-relationships)
+    - [Example: Customers and Orders](#example-customers-and-orders)
+    - [Querying Customer Orders](#querying-customer-orders)
+  - [4. Tree Structures (Hierarchies)](#4-tree-structures-hierarchies)
+    - [a) Parent Reference](#a-parent-reference)
+    - [b) Materialized Path](#b-materialized-path)
+    - [c) Array of Ancestors](#c-array-of-ancestors)
+  - [5. Real-World Example: E-commerce Order](#5-real-world-example-e-commerce-order)
+  - [6. Real-World Example: Social Network](#6-real-world-example-social-network)
+  - [7. Large Data Scenarios Requiring References](#7-large-data-scenarios-requiring-references)
+    - [Blog System with Large Content](#blog-system-with-large-content)
+    - [E-commerce with Extensive Product Data](#e-commerce-with-extensive-product-data)
+  - [8. Transactions & Data Consistency](#8-transactions--data-consistency)
+- [9. Best Practices for Large Data](#9-best-practices-for-large-data)
+  - [When to Split Documents](#when-to-split-documents)
+  - [Performance Considerations](#performance-considerations)
+  - [Example: Monitoring Document Size](#example-monitoring-document-size)
+- [10. Notes](#10-notes)
+- [11. Summary Table](#11-summary-table)
+- [12. Cascading Deletes/Updates](#12-cascading-deletesupdates)
+- [References](#references)
+
 ## Document Size Limitation
 
 **Important**: MongoDB has a **16MB document size limit**. While MongoDB prefers embedding for performance, you must use referencing when:

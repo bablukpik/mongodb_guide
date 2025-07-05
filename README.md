@@ -2,6 +2,60 @@
 
 A practical MongoDB setup with guides for running MongoDB in Docker, performing CRUD operations, and modeling real-world data relationships. Includes a full POS/inventory example and advanced relationship patterns.
 
+## Table of Contents
+
+- [Key MongoDB Concepts](#key-mongodb-concepts)
+- [Quick Links](#quick-links)
+- [Prerequisites](#prerequisites)
+- [Running MongoDB](#running-mongodb)
+- [Connecting to MongoDB](#connecting-to-mongodb)
+- [Some Useful Commands](#some-useful-commands)
+- [Example Queries (CRUD & Operators)](#example-queries-crud--operators)
+  - [Insert Documents](#insert-documents)
+  - [Find (Read) Documents](#find-read-documents)
+  - [Update Documents](#update-documents)
+  - [Delete Documents](#delete-documents)
+  - [Common Query and Update Operators](#common-query-and-update-operators)
+  - [Comparison and Logical Operators Examples](#comparison-and-logical-operators-examples)
+  - [Advanced Query Features](#advanced-query-features)
+    - [Text Search](#text-search)
+    - [Regular Expressions](#regular-expressions)
+    - [Date/Time Operations](#datetime-operations)
+    - [Bulk Operations](#bulk-operations)
+    - [Count and Distinct](#count-and-distinct)
+    - [Skip and Limit for Pagination](#skip-and-limit-for-pagination)
+    - [Explain Plan](#explain-plan)
+    - [Why Use .explain()?](#why-use-explain)
+    - [Explain Modes](#explain-modes)
+    - [Practical Examples](#practical-examples)
+    - [Key Metrics to Look For](#key-metrics-to-look-for)
+- [Indexing](#indexing)
+  - [Creating Indexes](#creating-indexes)
+  - [Index Types and Examples](#index-types-and-examples)
+  - [Checking Index Usage](#checking-index-usage)
+  - [Index Best Practices](#index-best-practices)
+- [Capped Collections](#capped-collections)
+  - [Creating Capped Collections](#creating-capped-collections)
+  - [Working with Capped Collections](#working-with-capped-collections)
+  - [Use Cases](#use-cases)
+- [Schema Validation](#schema-validation)
+  - [Creating Collections with Validation](#creating-collections-with-validation)
+  - [Adding Validation to Existing Collections](#adding-validation-to-existing-collections)
+  - [Validation Examples](#validation-examples)
+  - [Validation Options](#validation-options)
+  - [Testing Validation](#testing-validation)
+- [Aggregation](#aggregation)
+  - [Common Aggregation Operators](#common-aggregation-operators)
+  - [Aggregation Example](#aggregation-example)
+  - [Advanced Aggregation Operators](#advanced-aggregation-operators)
+    - [$merge - Write to Existing Collection](#merge---write-to-existing-collection)
+    - [$collStats - Collection Statistics](#collstats---collection-statistics)
+    - [$queryHistory - Query History (Atlas Data Federation)](#queryhistory---query-history-atlas-data-federation)
+    - [$sql - SQL Queries (Atlas Data Federation)](#sql---sql-queries-atlas-data-federation)
+- [Contribution Guidelines](#contribution-guidelines)
+- [License](#license)
+- [Contact/Support](#contactsupport)
+
 ## Key MongoDB Concepts
 
 - **Collection:** A group of MongoDB documents, similar to a table in relational databases.
@@ -18,26 +72,13 @@ A practical MongoDB setup with guides for running MongoDB in Docker, performing 
 - [POS/Inventory Example](./pos.md)
 - [Modeling Relationships in MongoDB](./relationship.md)
 
-## Table of Contents
-
-- [1. Prerequisites](#1-prerequisites)
-- [2. Running MongoDB](#2-running-mongodb)
-- [3. Connecting to MongoDB](#3-connecting-to-mongodb)
-- [4. Example Queries (CRUD & Operators)](#4-example-queries-crud--operators)
-- [5. Notes](#5-notes)
-- [6. POS/Inventory Example](#6-posinventory-example)
-- [7. Modeling Relationships in MongoDB](#7-modeling-relationships-in-mongodb)
-- [8. Contribution Guidelines](#contribution-guidelines)
-- [9. License](#license)
-- [10. Contact/Support](#contactsupport)
-
-## 1. Prerequisites
+## Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/) installed
 - [Docker Compose](https://docs.docker.com/compose/install/) installed
 - [mongosh](https://www.mongodb.com/try/download/shell) (MongoDB Shell) installed on your host
 
-## 2. Running MongoDB
+## Running MongoDB
 
 1. Start MongoDB with Docker Compose:
 
@@ -52,7 +93,7 @@ A practical MongoDB setup with guides for running MongoDB in Docker, performing 
    docker compose down -v
    ```
 
-## 3. Connecting to MongoDB
+## Connecting to MongoDB
 
 - Connect as the root user (created by `MONGO_INITDB_ROOT_USERNAME` and `MONGO_INITDB_ROOT_PASSWORD`):
 
@@ -73,7 +114,7 @@ A practical MongoDB setup with guides for running MongoDB in Docker, performing 
 - The root user is created in the `admin` database. You can create additional users as needed.
 - To reset credentials, you must remove the data volume: `docker compose down -v` and then `docker compose up -d`.
 
-## 4. Some Useful Commands
+## Some Useful Commands
 
 ```js
 // Syntax:
@@ -220,54 +261,54 @@ db.users.deleteMany({ age: { $lt: 30 } });
 
 ```js
 // Comparison
-$eq; // equal
+// $eq; equal
 db.users.find({ age: { $eq: 30 } });
-$ne; // not equal
+// $ne; not equal
 db.users.find({ city: { $ne: 'London' } });
-$gt; // greater than
-$gte; // greater than or equal
-$lt; // less than
-$lte; // less than or equal
-$in; // in array
+// $gt; greater than
+// $gte; greater than or equal
+// $lt; less than
+// $lte; less than or equal
+// $in; in array
 db.users.find({ city: { $in: ['London', 'Paris'] } });
-$nin; // not in array
+// $nin; not in array
 
 // Logical
-$and; // and
+// $and; and
 db.users.find({ $and: [{ age: { $gt: 25 } }, { city: 'London' }] });
-$or; // or
+// $or; or
 db.users.find({ $or: [{ city: 'London' }, { city: 'Paris' }] });
-$not; // not
+// $not; not
 db.users.find({ age: { $not: { $gt: 30 } } });
-$nor; // nor
+// $nor; nor
 
 // Element
-$exists; // field exists
+// $exists; field exists
 db.users.find({ phone: { $exists: true } });
-$type; // field type
+// $type; field type
 db.users.find({ age: { $type: 'int' } });
 
 // Array
-$all; // all elements match
+// $all; all elements match
 db.users.find({ tags: { $all: ['red', 'blue'] } });
-$size; // array size
+// $size; array size
 db.users.find({ tags: { $size: 2 } });
-$elemMatch; // element match
+// $elemMatch; element match
 db.users.find({ scores: { $elemMatch: { $gt: 80, $lt: 90 } } });
 
 // Update Operators
-$set; // set a field value
-$unset; // remove a field
-$inc; // increment a field
-$mul; // multiply a field
-$min; // set to min value
-$max; // set to max value
-$currentDate; // set to current date
-$rename; // rename a field
-$push; // add value to array
-$addToSet; // add value to array if not present
-$pull; // remove value from array
-$pop; // remove first or last element from array
+// $set; set a field value
+// $unset; remove a field
+// $inc; increment a field
+// $mul; multiply a field
+// $min; set to min value
+// $max; set to max value
+// $currentDate; set to current date
+// $rename; rename a field
+// $push; add value to array
+// $addToSet; add value to array if not present
+// $pull; remove value from array
+// $pop; remove first or last element from array
 ```
 
 ### Comparison and Logical Operators Examples
@@ -1060,7 +1101,7 @@ db.sales.aggregate([
 
 **Performance Note:** Aggregation pipelines can be resource-intensive. Use indexes on fields used in `$match` stages, and consider using `$limit` early in the pipeline to reduce the number of documents processed.
 
-#### Advanced Aggregation Operators
+### Advanced Aggregation Operators
 
 #### $merge - Write to Existing Collection
 

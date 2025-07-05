@@ -2,6 +2,32 @@
 
 This guide demonstrates how to model a simple Point of Sale (POS) or Inventory system using MongoDB.
 
+## Table of Contents
+
+- [Collections](#collections)
+- [Example Documents](#example-documents)
+  - [products](#products)
+  - [customers](#customers)
+  - [sales](#sales)
+  - [inventory_movements](#inventory_movements)
+  - [users](#users)
+  - [suppliers](#suppliers)
+  - [categories](#categories)
+- [Example Queries](#example-queries)
+- [User/Staff Management](#userstaff-management)
+- [Supplier Management](#supplier-management)
+- [Restocking Workflow](#restocking-workflow)
+- [Sales Reporting](#sales-reporting)
+- [Low Stock Alerts](#low-stock-alerts)
+- [Discounts and Promotions](#discounts-and-promotions)
+- [Returns and Refunds](#returns-and-refunds)
+- [Payment Processing](#payment-processing)
+- [Inventory Alerts](#inventory-alerts)
+- [Reporting & Analytics](#reporting--analytics)
+- [Indexing for Performance](#indexing-for-performance)
+- [API Examples](#api-examples)
+- [Notes](#notes)
+
 ## Collections
 
 - `products` — Product catalog
