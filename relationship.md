@@ -170,7 +170,135 @@ db.students_courses.find({ course_id: ObjectId('...') });
 
 You can use `$lookup` to join with `students` or `courses`.
 
-### 3. Tree Structures (Hierarchies)
+### 3. One-to-Many Relationships
+
+For relationships where one document relates to many documents in another collection, use references in the "many" side.
+
+#### Example: Users and Posts
+
+```js
+// User document (one)
+{
+  _id: ObjectId("..."),
+  username: "alice",
+  email: "alice@example.com",
+  name: "Alice Smith"
+}
+
+// Post documents (many) - each post references the user
+{
+  _id: ObjectId("..."),
+  title: "My First Post",
+  content: "Hello world!",
+  author_id: ObjectId("..."), // Reference to user
+  created_at: new Date()
+}
+
+{
+  _id: ObjectId("..."),
+  title: "MongoDB Tips",
+  content: "Here are some tips...",
+  author_id: ObjectId("..."), // Same user, different post
+  created_at: new Date()
+}
+```
+
+#### Querying One-to-Many Relationships
+
+```js
+// Find all posts by a specific user
+db.posts.find({ author_id: ObjectId('...') });
+
+// Find user and their posts using $lookup
+db.users.aggregate([
+  { $match: { _id: ObjectId('...') } },
+  {
+    $lookup: {
+      from: 'posts',
+      localField: '_id',
+      foreignField: 'author_id',
+      as: 'user_posts',
+    },
+  },
+]);
+
+// Count posts per user
+db.posts.aggregate([
+  {
+    $group: {
+      _id: '$author_id',
+      post_count: { $sum: 1 },
+    },
+  },
+]);
+```
+
+#### Example: Customers and Orders
+
+```js
+// Customer document (one)
+{
+  _id: ObjectId("..."),
+  name: "John Doe",
+  email: "john@example.com",
+  phone: "123-456-7890"
+}
+
+// Order documents (many) - each order references the customer
+{
+  _id: ObjectId("..."),
+  customer_id: ObjectId("..."), // Reference to customer
+  items: [
+    { product_id: ObjectId("..."), quantity: 2, price: 25.99 }
+  ],
+  total: 51.98,
+  status: "pending",
+  created_at: new Date()
+}
+
+{
+  _id: ObjectId("..."),
+  customer_id: ObjectId("..."), // Same customer, different order
+  items: [
+    { product_id: ObjectId("..."), quantity: 1, price: 15.00 }
+  ],
+  total: 15.00,
+  status: "delivered",
+  created_at: new Date()
+}
+```
+
+#### Querying Customer Orders
+
+```js
+// Find all orders for a specific customer
+db.orders.find({ customer_id: ObjectId('...') });
+
+// Find customer with their order history
+db.customers.aggregate([
+  { $match: { _id: ObjectId('...') } },
+  {
+    $lookup: {
+      from: 'orders',
+      localField: '_id',
+      foreignField: 'customer_id',
+      as: 'order_history',
+    },
+  },
+  {
+    $addFields: {
+      total_spent: {
+        $sum: '$order_history.total',
+      },
+      order_count: {
+        $size: '$order_history',
+      },
+    },
+  },
+]);
+```
+
+### 4. Tree Structures (Hierarchies)
 
 #### a) Parent Reference
 
@@ -200,7 +328,7 @@ Each document stores an array of ancestor IDs:
 
 These patterns help with querying subtrees or breadcrumbs.
 
-### 4. Real-World Example: E-commerce Order
+### 5. Real-World Example: E-commerce Order
 
 ```js
 {
@@ -225,7 +353,7 @@ These patterns help with querying subtrees or breadcrumbs.
 - Embedded address and status history for fast access
 - Referenced customer and products for normalization
 
-### 5. Real-World Example: Social Network
+### 6. Real-World Example: Social Network
 
 - **Users**: referenced by `_id`
 - **Posts**: reference user, embed small comments
@@ -246,7 +374,7 @@ These patterns help with querying subtrees or breadcrumbs.
 
 - For many comments, use a separate `comments` collection and reference the post.
 
-### 6. Large Data Scenarios Requiring References
+### 7. Large Data Scenarios Requiring References
 
 #### Blog System with Large Content
 
@@ -294,13 +422,13 @@ These patterns help with querying subtrees or breadcrumbs.
 }
 ```
 
-### 7. Transactions & Data Consistency
+### 8. Transactions & Data Consistency
 
 - MongoDB supports multi-document transactions (since v4.0) for replica sets and sharded clusters.
 - Use transactions when you need atomic updates across multiple collections (e.g., updating stock and recording a sale).
 - For most use cases, design your schema to minimize the need for multi-document transactions (favor embedding for atomicity).
 
-## 8. Best Practices for Large Data
+## 9. Best Practices for Large Data
 
 ### When to Split Documents
 
@@ -332,7 +460,7 @@ db.products.find().forEach(function (doc) {
 });
 ```
 
-## 9. Notes
+## 10. Notes
 
 - MongoDB is flexible: you can embed related data or use references, depending on your needs.
 - Use unique indexes to enforce uniqueness.
@@ -340,7 +468,7 @@ db.products.find().forEach(function (doc) {
 - Always handle referential integrity in your application logic.
 - **Remember the 16MB limit**: This is the most important constraint when choosing between embedding and referencing.
 
-## 10. Summary Table
+## 11. Summary Table
 
 | SQL Concept           | MongoDB Equivalent                |
 | --------------------- | --------------------------------- |
@@ -349,7 +477,7 @@ db.products.find().forEach(function (doc) {
 | Join                  | `$lookup` in aggregation          |
 | Referential Integrity | Enforced in application code      |
 
-## 11. Cascading Deletes/Updates
+## 12. Cascading Deletes/Updates
 
 - MongoDB does **not** support cascading deletes or updates natively.
 - You must handle cascading changes in your application logic (e.g., delete related sales when a product is deleted).
@@ -477,3 +605,8 @@ These patterns help with querying subtrees or breadcrumbs.
 - MongoDB supports multi-document transactions (since v4.0) for replica sets and sharded clusters.
 - Use transactions when you need atomic updates across multiple collections (e.g., updating stock and recording a sale).
 - For most use cases, design your schema to minimize the need for multi-document transactions (favor embedding for atomicity).
+
+## References
+
+- [MongoDB Documentation: Model Referenced One-to-Many Relationships](https://www.mongodb.com/docs/manual/tutorial/model-referenced-one-to-many-relationships-between-documents/)
+- [MongoDB Atlas Data Federation: $lookup Stage](https://www.mongodb.com/docs/atlas/data-federation/supported-unsupported/pipeline/lookup-stage/)
