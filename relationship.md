@@ -55,6 +55,7 @@ MongoDB is a NoSQL database and does not have built-in foreign key or primary ke
 
 ```js
 db.products.createIndex({ sku: 1 }, { unique: true });
+// Note: Same as: db.products.ensureIndex({ sku: 1 }, { unique: true }) (deprecated)
 ```
 
 ## 2. Foreign Key Equivalent (References)
@@ -258,6 +259,7 @@ db.users.aggregate([
     },
   },
 ]);
+// Note: $lookup is more efficient than multiple queries for complex joins
 
 // Count posts per user
 db.posts.aggregate([
@@ -268,6 +270,7 @@ db.posts.aggregate([
     },
   },
 ]);
+// Note: More efficient than: db.posts.find({ author_id: ObjectId('...') }).count()
 ```
 
 #### Example: Customers and Orders
@@ -333,6 +336,7 @@ db.customers.aggregate([
     },
   },
 ]);
+// Note: This aggregation provides both data and calculated fields in a single query
 ```
 
 ### 4. Tree Structures (Hierarchies)
@@ -495,6 +499,7 @@ db.products.find().forEach(function (doc) {
     print('Large document: ' + doc._id + ' - ' + size + ' bytes');
   }
 });
+// Note: Object.bsonsize() is more accurate than JSON.stringify().length for size estimation
 ```
 
 ## 10. Notes

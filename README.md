@@ -173,6 +173,7 @@ db.users.find({}, { name: 1, city: 1, _id: 0 });
 // Syntax:
 // .find().sort(sort).limit(n)
 db.users.find().sort({ age: -1 }).limit(2);
+// Note: Same as: db.users.find().sort({ age: -1 }).limit(2).toArray()
 ```
 
 ### Update Documents
@@ -192,6 +193,7 @@ db.users.replaceOne(
   { name: 'Charlie' },
   { name: 'Charlie', age: 36, city: 'Munich' },
 );
+// Note: replaceOne replaces the entire document, while updateOne only modifies specified fields
 
 // Syntax:
 // .updateOne(filter, { $unset: { field: "" } })
@@ -242,6 +244,11 @@ db.users.updateOne({ fullName: 'Alice' }, { $pull: { tags: 'old' } });
 
 // Syntax:
 // .updateOne(filter, { $pop: { arrayField: 1 or -1 } })
+db.users.updateOne({ fullName: 'Alice' }, { $pop: { tags: 1 } }); // Remove last element
+db.users.updateOne({ fullName: 'Alice' }, { $pop: { tags: -1 } }); // Remove first element
+
+// Syntax:
+// .updateOne(filter, { $pop: { arrayField: 1 or -1 } })
 db.users.updateOne({ fullName: 'Alice' }, { $pop: { tags: 1 } });
 ```
 
@@ -255,60 +262,125 @@ db.users.deleteOne({ name: 'Bob' });
 // Syntax:
 // .deleteMany(filter)
 db.users.deleteMany({ age: { $lt: 30 } });
+// Note: Same as: db.users.remove({ age: { $lt: 30 } }, { justOne: false }) (deprecated)
 ```
 
 ### Common Query and Update Operators
 
 ```js
-// Comparison
-// $eq; equal
+// Comparison Operators
+// $eq - equal (same as: db.users.find({ age: 30 }))
 db.users.find({ age: { $eq: 30 } });
-// $ne; not equal
+
+// $ne - not equal
 db.users.find({ city: { $ne: 'London' } });
-// $gt; greater than
-// $gte; greater than or equal
-// $lt; less than
-// $lte; less than or equal
-// $in; in array
-db.users.find({ city: { $in: ['London', 'Paris'] } });
-// $nin; not in array
 
-// Logical
-// $and; and
+// $gt - greater than
+db.users.find({ age: { $gt: 25 } });
+
+// $gte - greater than or equal
+db.users.find({ age: { $gte: 25 } });
+
+// $lt - less than
+db.users.find({ age: { $lt: 30 } });
+
+// $lte - less than or equal
+db.users.find({ age: { $lte: 30 } });
+
+// $in - in array (more efficient than multiple $or conditions)
+db.users.find({ city: { $in: ['London', 'Paris', 'Berlin'] } });
+
+// $nin - not in array
+db.users.find({ city: { $nin: ['London', 'Paris'] } });
+
+// Logical Operators
+// $and - and (usually implicit, but explicit for complex conditions)
 db.users.find({ $and: [{ age: { $gt: 25 } }, { city: 'London' }] });
-// $or; or
-db.users.find({ $or: [{ city: 'London' }, { city: 'Paris' }] });
-// $not; not
-db.users.find({ age: { $not: { $gt: 30 } } });
-// $nor; nor
+// Note: Same as: db.users.find({ age: { $gt: 25 }, city: 'London' })
 
-// Element
-// $exists; field exists
+// $or - or
+db.users.find({ $or: [{ city: 'London' }, { city: 'Paris' }] });
+
+// $not - not
+db.users.find({ age: { $not: { $gt: 30 } } });
+// Note: Same as: db.users.find({ age: { $lte: 30 } })
+
+// $nor - nor (neither condition is true)
+db.users.find({ $nor: [{ age: { $lt: 25 } }, { city: 'Paris' }] });
+// Note: Returns users who are NOT under 25 AND NOT from Paris
+
+// Element Operators
+// $exists - field exists
 db.users.find({ phone: { $exists: true } });
-// $type; field type
+
+// $type - field type
 db.users.find({ age: { $type: 'int' } });
 
-// Array
-// $all; all elements match
+// Array Operators
+// $all - all elements match (order doesn't matter)
 db.users.find({ tags: { $all: ['red', 'blue'] } });
-// $size; array size
-db.users.find({ tags: { $size: 2 } });
-// $elemMatch; element match
-db.users.find({ scores: { $elemMatch: { $gt: 80, $lt: 90 } } });
+// Note: Will match ['red', 'blue', 'green'] but not ['red', 'green']
 
-// Update Operators
-// $set; set a field value
-// $unset; remove a field
-// $inc; increment a field
-// $mul; multiply a field
-// $min; set to min value
-// $max; set to max value
-// $currentDate; set to current date
-// $rename; rename a field
-// $push; add value to array
-// $addToSet; add value to array if not present
-// $pull; remove value from array
-// $pop; remove first or last element from array
+// $size - array size
+db.users.find({ tags: { $size: 2 } });
+
+// $elemMatch - element match (for complex array element conditions)
+db.users.find({ scores: { $elemMatch: { $gt: 80, $lt: 90 } } });
+// Note: Finds array elements where score > 80 AND < 90
+```
+
+### Update Operators Reference
+
+```js
+// Field Update Operators
+// $set - Set a field value (most common update operator)
+db.users.updateOne({ name: 'Alice' }, { $set: { city: 'New York' } });
+
+// $unset - Remove a field (sets field to undefined, then removes it)
+db.users.updateOne({ name: 'Alice' }, { $unset: { city: '' } });
+// Note: Empty string "" is required for $unset, but the value doesn't matter
+
+// $rename - Rename a field (preserves value and type)
+db.users.updateOne({ name: 'Alice' }, { $rename: { name: 'fullName' } });
+// Note: More efficient than $unset + $set for renaming
+
+// Numeric Update Operators
+// $inc - Increment a field (can use negative values to decrement)
+db.users.updateOne({ name: 'Alice' }, { $inc: { age: 1 } });
+db.users.updateOne({ name: 'Alice' }, { $inc: { age: -1 } }); // Decrement
+
+// $mul - Multiply a field (can use fractions for division)
+db.users.updateOne({ name: 'Alice' }, { $mul: { age: 2 } });
+db.users.updateOne({ name: 'Alice' }, { $mul: { age: 0.5 } }); // Divide by 2
+
+// $min - Set to minimum value (only updates if current value is greater)
+db.users.updateOne({ name: 'Alice' }, { $min: { age: 18 } });
+// Note: Only updates if current age > 18, otherwise no change
+
+// $max - Set to maximum value (only updates if current value is less)
+db.users.updateOne({ name: 'Alice' }, { $max: { age: 65 } });
+// Note: Only updates if current age < 65, otherwise no change
+
+// Date Update Operators
+// $currentDate - Set to current date (can use Date or timestamp)
+db.users.updateOne({ name: 'Alice' }, { $currentDate: { lastModified: true } });
+// Note: true = Date object, { $type: "timestamp" } = timestamp
+
+// Array Update Operators
+// $push - Add value to array (always adds, even if duplicate)
+db.users.updateOne({ name: 'Alice' }, { $push: { tags: 'new' } });
+
+// $addToSet - Add value to array if not present (prevents duplicates)
+db.users.updateOne({ name: 'Alice' }, { $addToSet: { tags: 'unique' } });
+// Note: Better than $push when you want to avoid duplicates
+
+// $pull - Remove value from array (removes all matching elements)
+db.users.updateOne({ name: 'Alice' }, { $pull: { tags: 'old' } });
+
+// $pop - Remove first (-1) or last (1) element from array
+db.users.updateOne({ name: 'Alice' }, { $pop: { tags: 1 } }); // Remove last element
+db.users.updateOne({ name: 'Alice' }, { $pop: { tags: -1 } }); // Remove first element
+// Note: $pop is more efficient than $pull for removing by position
 ```
 
 ### Comparison and Logical Operators Examples
@@ -449,11 +521,13 @@ db.users.bulkWrite([
 // .countDocuments(query)
 // Count documents matching criteria
 db.users.countDocuments({ age: { $gt: 25 } });
+// Note: Same as: db.users.count({ age: { $gt: 25 } }) (deprecated)
 
 // Syntax:
 // .distinct(field, query)
 // Get distinct values for a field
 db.users.distinct('city');
+// Note: More efficient than: db.users.find({}, { city: 1 }).distinct('city')
 
 // Syntax:
 // .distinct(field, query)
@@ -473,6 +547,7 @@ db.users.find().skip(10).limit(5);
 // .find().sort().skip().limit()
 // Pagination with sorting
 db.users.find().sort({ name: 1 }).skip(10).limit(5);
+// Note: For better performance on large datasets, use cursor-based pagination with _id
 ```
 
 #### Explain Plan
@@ -566,6 +641,7 @@ db.users.createIndex({ email: 1 });
 // .createIndex({ field1: 1, field2: 1 })
 // Compound index (multiple fields)
 db.users.createIndex({ age: 1, city: 1 });
+// Note: Order matters! Index { age: 1, city: 1 } is different from { city: 1, age: 1 }
 
 // Syntax:
 // .createIndex({ field: 1 }, { unique: true })
@@ -581,6 +657,7 @@ db.products.createIndex({ name: 'text', description: 'text' });
 // .createIndex({ field: 1 }, { sparse: true })
 // Sparse index (only includes documents with the field)
 db.users.createIndex({ phone: 1 }, { sparse: true });
+// Note: Sparse indexes are smaller and faster but only work for documents with the indexed field
 ```
 
 ### Index Types and Examples
@@ -714,6 +791,7 @@ db.logs.stats();
 
 // Convert existing collection to capped (requires empty collection)
 db.runCommand({ convertToCapped: 'logs', size: 1000000 });
+// Note: Collection must be empty to convert to capped
 ```
 
 ### Use Cases
@@ -983,6 +1061,7 @@ db.users.insertOne({
   name: 'Bob Smith',
   age: 25,
 }); // ❌ Error: missing required field 'email'
+// Note: Validation errors can be caught in application code for better error handling
 ```
 
 ## Aggregation
@@ -1025,6 +1104,7 @@ Aggregation is MongoDB's framework for processing documents and returning comput
 // .aggregate([pipeline])
 // Group by city and count users
 db.users.aggregate([{ $group: { _id: '$city', count: { $sum: 1 } } }]);
+// Note: More efficient than: db.users.find().forEach(function(doc) { /* count manually */ })
 ```
 
 2.
@@ -1100,6 +1180,7 @@ db.sales.aggregate([
 ```
 
 **Performance Note:** Aggregation pipelines can be resource-intensive. Use indexes on fields used in `$match` stages, and consider using `$limit` early in the pipeline to reduce the number of documents processed.
+// Note: Always use indexes on fields in $match stages for optimal performance
 
 ### Advanced Aggregation Operators
 

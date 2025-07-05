@@ -191,12 +191,14 @@ db.products.insertOne({
   created_at: new Date(),
   updated_at: new Date(),
 });
+// Note: Same as: db.products.insert({ ... }) (deprecated)
 ```
 
 ### Find all products in stock
 
 ```js
 db.products.find({ stock: { $gt: 0 } });
+// Note: Same as: db.products.find({ stock: { $gte: 1 } })
 ```
 
 ### Update stock after a sale
@@ -263,12 +265,14 @@ db.sales.aggregate([
     },
   },
 ]);
+// Note: More efficient than: db.sales.find({ created_at: { $gte: startOfDay, $lt: endOfDay } }).forEach(...)
 ```
 
 ### Find low-stock products
 
 ```js
 db.products.find({ stock: { $lte: '$min_stock' } });
+// Note: This query uses field comparison - stock must be less than or equal to the min_stock field value
 ```
 
 ### Track inventory movement (optional)
@@ -925,6 +929,7 @@ db.products.createIndex({ name: 'text', description: 'text' });
 
 ```js
 db.products.findOne({ sku: 'SKU123' });
+// Note: More efficient than: db.products.find({ sku: 'SKU123' }).limit(1)
 ```
 
 ### Search Products
@@ -933,6 +938,7 @@ db.products.findOne({ sku: 'SKU123' });
 db.products.find({
   $text: { $search: 'wireless mouse' },
 });
+// Note: Requires text index: db.products.createIndex({ name: 'text', description: 'text' })
 ```
 
 ### Get Customer Orders
@@ -943,6 +949,7 @@ db.sales.aggregate([
   { $sort: { created_at: -1 } },
   { $limit: 10 },
 ]);
+// Note: More efficient than: db.sales.find({ customer_id: ObjectId('...') }).sort({ created_at: -1 }).limit(10)
 ```
 
 ### Get Low Stock Products with Supplier Info
