@@ -970,6 +970,10 @@ Aggregation is MongoDB's framework for processing documents and returning comput
 | `$addFields`                   | Adds new fields to documents                    |
 | `$count`                       | Counts documents in the pipeline                |
 | `$out`                         | Writes results to a new collection              |
+| `$merge`                       | Writes results to existing collection           |
+| `$collStats`                   | Returns collection statistics                   |
+| `$queryHistory`                | Returns query history (Atlas Data Federation)   |
+| `$sql`                         | Executes SQL queries (Atlas Data Federation)    |
 
 ### Aggregation Example
 
@@ -1024,7 +1028,7 @@ db.orders.aggregate([
 5.
 
 ```js
-// Example 4: Complex aggregation with multiple stages
+// Complex aggregation with multiple stages
 db.sales.aggregate([
   // Stage 1: Filter sales from last month
   {
@@ -1055,6 +1059,92 @@ db.sales.aggregate([
 ```
 
 **Performance Note:** Aggregation pipelines can be resource-intensive. Use indexes on fields used in `$match` stages, and consider using `$limit` early in the pipeline to reduce the number of documents processed.
+
+#### Advanced Aggregation Operators
+
+#### $merge - Write to Existing Collection
+
+```js
+// Syntax:
+// .aggregate([{ $merge: { into: "collection", whenMatched: "replace" } }])
+// Merge aggregation results into existing collection
+db.sales.aggregate([
+  { $group: { _id: '$productId', totalSales: { $sum: '$amount' } } },
+  {
+    $merge: {
+      into: 'product_summary',
+      whenMatched: 'replace',
+      whenNotMatched: 'insert',
+    },
+  },
+]);
+```
+
+#### $collStats - Collection Statistics
+
+```js
+// Syntax:
+// .aggregate([{ $collStats: { latencyStats: { histograms: true } } }])
+// Get detailed collection statistics
+db.users.aggregate([
+  {
+    $collStats: {
+      latencyStats: { histograms: true },
+      storageStats: {},
+      count: {},
+    },
+  },
+]);
+
+// Syntax:
+// .aggregate([{ $collStats: { storageStats: {} } }])
+// Get storage statistics only
+db.products.aggregate([{ $collStats: { storageStats: {} } }]);
+```
+
+#### $queryHistory - Query History (Atlas Data Federation)
+
+```js
+// Syntax:
+// .aggregate([{ $queryHistory: { ... } }])
+// Get query history from federated data sources
+db.federated_collection.aggregate([
+  {
+    $queryHistory: {
+      startDate: ISODate('2024-01-01'),
+      endDate: ISODate('2024-12-31'),
+      limit: 100,
+    },
+  },
+]);
+```
+
+#### $sql - SQL Queries (Atlas Data Federation)
+
+```js
+// Syntax:
+// .aggregate([{ $sql: { query: "SELECT * FROM table" } }])
+// Execute SQL query on federated data source
+db.federated_collection.aggregate([
+  {
+    $sql: {
+      query:
+        'SELECT customer_id, SUM(amount) as total FROM sales GROUP BY customer_id',
+    },
+  },
+]);
+
+// Syntax:
+// .aggregate([{ $sql: { query: "SELECT * FROM table WHERE condition" } }])
+// SQL query with conditions
+db.federated_collection.aggregate([
+  {
+    $sql: {
+      query: "SELECT * FROM users WHERE age > 25 AND city = 'New York'",
+    },
+  },
+]);
+```
 
 ## Contribution Guidelines
 
