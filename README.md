@@ -1294,7 +1294,18 @@ _Contributions are welcome! Please open an issue or submit a pull request._
 
 ## License
 
-_Add your license here (e.g., MIT, Apache 2.0, etc.)._
+This project is in the public domain. You are free to use, modify, distribute, and commercialize this work without any restrictions.
+
+**What you can do:**
+
+- ✅ Use it for any purpose (commercial, personal, educational)
+- ✅ Modify and adapt it however you want
+- ✅ Distribute it freely
+- ✅ Include it in your own projects
+- ✅ Sell it or use it in commercial products
+- ✅ No attribution required (though appreciated!)
+
+**No restrictions, no conditions, no strings attached.**
 
 ## Contact/Support
 
