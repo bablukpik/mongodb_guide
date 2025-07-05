@@ -76,7 +76,7 @@ A practical MongoDB setup with guides for running MongoDB in Docker, performing 
 
 - [Docker](https://docs.docker.com/get-docker/) installed
 - [Docker Compose](https://docs.docker.com/compose/install/) installed
-- [mongosh](https://www.mongodb.com/try/download/shell) (MongoDB Shell) installed on your host
+- [mongosh](https://www.mongodb.com/try/download/shell) (MongoDB Shell) installed on your host OR [MongoDB Compass](https://www.mongodb.com/try/download/compass) (GUI for MongoDB)
 
 ## Running MongoDB
 
@@ -95,6 +95,8 @@ A practical MongoDB setup with guides for running MongoDB in Docker, performing 
 
 ## Connecting to MongoDB
 
+### Using mongosh (Command Line)
+
 - Connect as the root user (created by `MONGO_INITDB_ROOT_USERNAME` and `MONGO_INITDB_ROOT_PASSWORD`):
 
   ```sh
@@ -108,11 +110,29 @@ A practical MongoDB setup with guides for running MongoDB in Docker, performing 
   use mongo_db
   ```
 
+### Using MongoDB Compass (GUI)
+
+1. **Download and Install**: Download [MongoDB Compass](https://www.mongodb.com/try/download/compass) for your operating system.
+
+2. **Connect to MongoDB**:
+
+   - Open MongoDB Compass
+   - Use the connection string: `mongodb://admin:admin@localhost:27017`
+   - Click "Connect"
+
+3. **Navigate the Interface**:
+   - Browse databases and collections
+   - View, edit, and delete documents
+   - Create queries using the visual query builder
+   - Analyze query performance
+   - Create and manage indexes
+
 **Notes**
 
 - The database (`mongo_db`) will only appear in `show dbs` after it contains at least one document.
 - The root user is created in the `admin` database. You can create additional users as needed.
 - To reset credentials, you must remove the data volume: `docker compose down -v` and then `docker compose up -d`.
+- **MongoDB Compass** provides a user-friendly interface for database management, query building, and performance analysis.
 
 ## Some Useful Commands
 
